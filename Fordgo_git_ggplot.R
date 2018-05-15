@@ -61,7 +61,6 @@ ggplot(fordgobike_dur_under30_weekends %>% count(start_hour, user_type) %>% muta
        geom_bar(stat="identity")+geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")),
                                            position=position_stack(),size=4,vjust=1)
 
-
 ggplot(fordgobike_dur_under30_weekdays %>% count(start_hour, user_type) %>% mutate(pct=n/sum(n),ypos = cumsum(n) - 0.5*n),
        aes(start_hour, n, fill=user_type))+
        geom_bar(stat="identity")+geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")),
@@ -118,4 +117,8 @@ ggplot(station_name_paired, aes(x = start_hour, y = count_t))+
   geom_bar(aes(fill = user_type), stat = "identity",position = position_dodge(0.9))+
   facet_wrap(~week,scales = "free")+xlab("Start Hour")+ggtitle("Start Hour in different weekdays")
 
+#ggmap for fun
+pop_startlocation<-sqldf('select start_station_latitude, start_station_longitude from station_name_paired')
+SanFran<-get_map(location = "San Francisco",source="google",maptype = "terrain",zoom = 11)
 
+ggmap(SanFran)+geom_point(data=pop_startlocation,aes(x=start_station_longitude,y=start_station_latitude))
