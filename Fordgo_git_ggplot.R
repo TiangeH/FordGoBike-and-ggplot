@@ -21,6 +21,8 @@ summary(fordgobike_dur_under30$duration_min)
 fordgobike_dur_under30$week <- weekdays(as.Date(fordgobike_dur_under30$start_time),abbreviate=F)
 fordgobike_dur_under30$month<-months(as.Date(fordgobike_dur_under30$start_time),abbreviate=F)
 fordgobike_dur_under30$start_hour<-as.integer(substr(fordgobike_dur_under30$start_time,12,13))
+
+#we can divide day into morning, noon etc
 fordgobike_dur_under30$period<-cut(fordgobike_dur_under30$start_hour,c(00,06,10,15,19,23)
                                    ,labels=c("else","morning","noon","afternoon","evening"))
 ggplot(fordgobike_dur_under30, aes(x=period))+geom_bar()
@@ -32,6 +34,7 @@ fordgobike_dur_under30_weekdays<-sqldf('select * from fordgobike_dur_under30
 fordgobike_dur_under30_weekends<-sqldf('select * from fordgobike_dur_under30 
                                        where week  in ("saturday","Sunday")')
 
+#use "fill= "function to compare the subscriber and customer
 ggplot(fordgobike_dur_under30_weekdays,aes(x=period))+
   geom_bar(aes(fill=user_type))+xlab("Different Period Each Day")+ylab("")+
   ggtitle("Weekdays Bike Usage Based On Different Period")+labs(fill="user type")
@@ -48,6 +51,8 @@ ggplot(fordgobike_dur_under30_weekends,aes(x=start_hour))+
   geom_bar(aes(fill=user_type))+xlab("Weekday StartHour")+
   ggtitle("Weekends Start Hour") 
 
+#alpha is for adjusting the transparency level
+#position="identity" mean overlap the data. we have certain position can be used.
 ggplot(fordgobike_dur_under30_weekdays)+
   geom_bar(aes(x=start_hour,fill=user_type,col=user_type),colour = "lightblue",alpha=0.5,position = "identity")+
   scale_fill_manual(values = c("black", "pink"))+xlab("Weekday StartHour")+
@@ -58,6 +63,7 @@ ggplot(fordgobike_dur_under30_weekends)+
   geom_bar(aes(x=start_hour,fill=user_type,col=user_type),colour = "lightblue",alpha=0.5,position = "identity")+scale_fill_manual(values = c("black", "pink"))+xlab("Weekends StartHour")+ylab("")+
   ggtitle("Weekends Start Hour")
 
+#to label percentage on geom_bar
 ggplot(fordgobike_dur_under30_weekends %>% count(start_hour, user_type) %>% mutate(pct=n/sum(n),ypos = cumsum(n) - 0.5*n),
        aes(start_hour, n, fill=user_type))+
        geom_bar(stat="identity")+geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")),
@@ -118,8 +124,17 @@ ggplot(station_name_paired, aes(x = start_hour, y = count_t))+
   geom_bar(aes(fill = user_type), stat = "identity",position = position_dodge(0.9))+
   facet_wrap(~week,scales = "free")+xlab("Start Hour")+ggtitle("Start Hour in different weekdays")
 
-#ggmap for fun
+#we found that most subscribers riding between 5 to 10 minutes during weekdays.
+#The peak hour for weekdays are 8-9 in the morning and 5-6 in the afternoon. There are not so many customers using bicycle during weekdays. 
+#Subscribers might be people working in the city and using bicycle for commute purpose. 
+#During weekends, both subscribers and customers liek to use bicycles between 11am-4pm. 
+#The riding duration during weekends is longer than that during weekdays. Many customers riding around 10-20 minutes.  
+#Compared to the usage betwee June to August, the usage between September and December is low.
+
+#a little abit ggmap
 pop_startlocation<-sqldf('select start_station_latitude, start_station_longitude from station_name_paired')
 SanFran<-get_map(location = "San Francisco",source="google",maptype = "terrain",zoom = 11)
 
 ggmap(SanFran)+geom_point(data=pop_startlocation,aes(x=start_station_longitude,y=start_station_latitude))
+
+
