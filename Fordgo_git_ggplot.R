@@ -9,7 +9,7 @@ library(ggmap)
 
 head(fordgobike)
 str(fordgobike)
-
+#change seconds to minutes and select duration under or equal to 30 minutes
 fordgobike$duration_min<-round(fordgobike$duration_sec/60,2)
 fordgobike$duration_sec<-NULL
 fordgobike_dur_under30<-sqldf('select*from fordgobike where duration_min <= 30')
@@ -17,6 +17,7 @@ boxplot(fordgobike_dur_under30$duration_min)
 summary(fordgobike_dur_under30$duration_min)
 
 
+#abstract week, month and start_hour for later use
 fordgobike_dur_under30$week <- weekdays(as.Date(fordgobike_dur_under30$start_time),abbreviate=F)
 fordgobike_dur_under30$month<-months(as.Date(fordgobike_dur_under30$start_time),abbreviate=F)
 fordgobike_dur_under30$start_hour<-as.integer(substr(fordgobike_dur_under30$start_time,12,13))
@@ -25,6 +26,7 @@ fordgobike_dur_under30$period<-cut(fordgobike_dur_under30$start_hour,c(00,06,10,
 ggplot(fordgobike_dur_under30, aes(x=period))+geom_bar()
 table(fordgobike_dur_under30$period)
 
+#seperate data into weekdays and weekends
 fordgobike_dur_under30_weekdays<-sqldf('select * from fordgobike_dur_under30 
                                        where week not in ("saturday","Sunday")')
 fordgobike_dur_under30_weekends<-sqldf('select * from fordgobike_dur_under30 
@@ -48,7 +50,7 @@ ggplot(fordgobike_dur_under30_weekends,aes(x=start_hour))+
 
 ggplot(fordgobike_dur_under30_weekdays)+
   geom_bar(aes(x=start_hour,fill=user_type,col=user_type),colour = "lightblue",alpha=0.5,position = "identity")+
-  scale_fill_manual(values = c("black", "pink"))+xlab("Weekday StartHour")+ylab("")+
+  scale_fill_manual(values = c("black", "pink"))+xlab("Weekday StartHour")+
   ggtitle("Weekdays Start Hour")
 
 
@@ -94,12 +96,11 @@ ggplot(fordgobike_dur_under30_weekends)+
   scale_fill_manual(values = c("black", "pink"))+xlab("weekends duration")+
   ggtitle("Weekends Bike Usage Duration")
 
-
+#make plot in weekdays order
 fordgobike_dur_under30$week <- ordered(fordgobike_dur_under30$week , levels=c("Monday", "Tuesday", "Wednesday", "Thursday","Friday", "Saturday", "Sunday"))
-
 ggplot(fordgobike_dur_under30,aes(x=week))+geom_bar(aes(fill=duration_interval)) 
 
-
+#this code is learned from Stackoverflow (https://stackoverflow.com/questions/37817809/r-ggplot-stacked-bar-chart-with-counts-on-y-axis-but-percentage-as-label)
 fordgobike_dur_under30$duration_interval<-cut( fordgobike_dur_under30$duration_min, breaks = seq(0,30,5))
 ggplot(fordgobike_dur_under30 %>% count(week, duration_interval) %>% mutate(pct=n/sum(n),ypos = cumsum(n) - 0.5*n),aes(week, n, fill=duration_interval))+
   geom_bar(stat="identity")+geom_text(aes(label=paste0(sprintf("%1.1f", pct*100),"%")),
