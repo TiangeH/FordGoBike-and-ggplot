@@ -1,6 +1,5 @@
 fordgobike<-read.csv(file = "C:/Users/Tiange/Desktop/fordgobike.csv", header = T,sep=',')
 
-library(png)
 library(grid)
 library(ggplot2)
 library(sqldf)
